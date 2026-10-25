@@ -16,6 +16,14 @@ html.lm-active mark.lm-mark:hover { filter: brightness(0.92); }
 html.lm-active user-query ::selection,
 html.lm-active model-response ::selection { background: rgba(255, 213, 79, 0.55); }
 
+/* Radierer */
+html.lm-active.lm-erasing mark.lm-mark {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><g transform='rotate(-45 12 12)'><rect x='4' y='8' width='16' height='8' rx='2' fill='%23f8a5c8' stroke='%23333'/><rect x='4' y='8' width='6' height='8' rx='2' fill='%23fff' stroke='%23333'/></g></svg>") 6 18, pointer;
+}
+html.lm-active.lm-erasing mark.lm-mark:hover { filter: none; opacity: 0.55; text-decoration: line-through; }
+html.lm-active.lm-erasing user-query ::selection,
+html.lm-active.lm-erasing model-response ::selection { background: rgba(179, 38, 30, 0.25); }
+
 /* Gemeinsame Basis für das UI der Extension */
 .lm-ui, .lm-ui * {
   box-sizing: border-box;
@@ -59,6 +67,13 @@ html.lm-active model-response ::selection { background: rgba(255, 213, 79, 0.55)
 .lm-color.lm-pink,   .lm-dot.lm-pink   { background: #f8a5c8; }
 .lm-color.lm-blue,   .lm-dot.lm-blue   { background: #9fd0fb; }
 .lm-color.lm-selected { border-color: #1f1f1f; }
+.lm-eraser {
+  grid-column: 1 / -1;
+  padding: 6px 8px; border-radius: 8px; border: 2px dashed #c4c4cc;
+  background: transparent; color: inherit; font-size: 12px; font-weight: 500; text-align: left;
+}
+.lm-eraser:hover { background: rgba(127, 127, 127, 0.1); }
+.lm-eraser.lm-selected { border-style: solid; border-color: #b3261e; background: rgba(179, 38, 30, 0.08); color: #b3261e; }
 
 .lm-actions { display: flex; flex-direction: column; gap: 6px; }
 .lm-primary, .lm-secondary {

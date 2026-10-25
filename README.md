@@ -13,6 +13,7 @@ Markiere Gemini-Chats mit dem Textmarker und lass Claude daraus eine Lernzusamme
 - Text in einer Nachricht markieren = Textmarker in der gewählten Farbe
   - Gelb **Wichtig** · Grün **Definition** · Rosa **Unklar** · Blau **Beispiel**
 - Markierung anklicken → Farbe ändern oder entfernen
+- **🧽 Radierer** (in der Leiste): ein Klick auf eine Markierung löscht den ganzen Markierstrich; über Text ziehen löscht jede Markierung, die dabei berührt wird, ebenfalls komplett. Eine Farbe anklicken schaltet zurück zum Textmarker.
 - **✨ An Claude geben**: lädt den kompletten Chat, kopiert ihn mit deinen Markierungen und einer fertigen Anleitung in die Zwischenablage und öffnet claude.ai → dort `Strg+V` und abschicken. Claude erstellt die Zusammenfassung als Dokument zum Herunterladen.
 - **Nur Markierungen**: exportiert deine Markierungen direkt als HTML/Markdown-Datei
 

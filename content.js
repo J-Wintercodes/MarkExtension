@@ -26,6 +26,7 @@
   const state = {
     active: false,
     color: 'yellow',
+    erasing: false,
     chatKey: location.pathname,
     highlights: [],
     busy: false,
@@ -207,9 +208,42 @@
 
   // ---------- Markieren ----------
 
+  function makeHighlight(index, start, end, color, role) {
+    return {
+      id: uid(),
+      text: index.text.slice(start, end),
+      color,
+      role,
+      msgKey: normKey(index.text),
+      prefix: index.text.slice(Math.max(0, start - 40), start),
+      created: Date.now(),
+    };
+  }
+
+  function removeHighlight(id) {
+    unwrap(id);
+    state.highlights = state.highlights.filter((x) => x.id !== id);
+    saveHighlights();
+  }
+
+  // Radierer: jede Markierung, die den Bereich [start, end) auch nur berührt, wird komplett entfernt.
+  function eraseRange(msg, index, start, end) {
+    const ids = new Set();
+    for (const e of index.nodes) {
+      if (e.start + e.node.length <= start || e.start >= end) continue;
+      for (let p = e.node.parentElement; p && p !== msg.root; p = p.parentElement) {
+        if (p.matches('mark.lm-mark')) ids.add(p.dataset.lmId);
+      }
+    }
+    if (!ids.size) return;
+    ids.forEach(unwrap);
+    state.highlights = state.highlights.filter((x) => !ids.has(x.id));
+    saveHighlights();
+  }
+
   function onMouseUp(e) {
     if (!state.active || state.busy || e.button !== 0) return;
-    if (e.target.closest('.lm-ui, .lm-mark')) return;
+    if (e.target.closest('.lm-ui') || (!state.erasing && e.target.closest('.lm-mark'))) return;
     setTimeout(() => {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || !sel.rangeCount) return;
@@ -226,17 +260,14 @@
       let end = offsetOf(index, range.endContainer, range.endOffset);
       while (start < end && /\s/.test(index.text[start])) start++;
       while (end > start && /\s/.test(index.text[end - 1])) end--;
+      if (state.erasing) {
+        sel.removeAllRanges();
+        if (end > start) eraseRange(msg, index, start, end);
+        return;
+      }
       if (end - start < 2) return;
 
-      const hl = {
-        id: uid(),
-        text: index.text.slice(start, end),
-        color: state.color,
-        role: msg.role,
-        msgKey: normKey(index.text),
-        prefix: index.text.slice(Math.max(0, start - 40), start),
-        created: Date.now(),
-      };
+      const hl = makeHighlight(index, start, end, state.color, msg.role);
       wrapRange(index, start, end, hl);
       sel.removeAllRanges();
       state.highlights.push(hl);
@@ -260,6 +291,10 @@
     e.stopPropagation();
     closeMarkMenu();
     const id = mark.dataset.lmId;
+    if (state.erasing) {
+      removeHighlight(id);
+      return;
+    }
     const hl = state.highlights.find((x) => x.id === id);
     if (!hl) return;
 
@@ -283,9 +318,7 @@
         class: 'lm-delete',
         title: 'Markierung entfernen',
         onclick: () => {
-          unwrap(id);
-          state.highlights = state.highlights.filter((x) => x.id !== id);
-          saveHighlights();
+          removeHighlight(id);
           closeMarkMenu();
         },
       }, 'Entfernen')
@@ -303,12 +336,17 @@
     if (bar) return bar;
     const colorButtons = Object.entries(COLORS).map(([color, label]) =>
       h('button', {
-        class: `lm-color lm-${color}${color === state.color ? ' lm-selected' : ''}`,
+        class: `lm-color lm-${color}`,
         dataset: { color },
         title: `Farbe: ${label}`,
         onclick: () => setColor(color),
       }, label)
     );
+    const eraserButton = h('button', {
+      class: 'lm-eraser',
+      title: 'Radierer: Markierung anklicken oder über markierten Text ziehen, um ihn zu löschen',
+      onclick: () => setErasing(!state.erasing),
+    }, '🧽 Radierer');
     bar = h('div', { class: 'lm-ui lm-bar' },
       h('div', { class: 'lm-bar-head' },
         h('span', { class: 'lm-title' }, '🖍️ Lernmodus'),
@@ -317,7 +355,7 @@
         h('button', { class: 'lm-icon-btn', title: 'Lernmodus beenden (Alt+Shift+L)', onclick: () => setActive(false) }, '✕')
       ),
       h('div', { class: 'lm-bar-body' },
-        h('div', { class: 'lm-colors' }, ...colorButtons),
+        h('div', { class: 'lm-colors' }, ...colorButtons, eraserButton),
         h('div', { class: 'lm-actions' },
           h('button', { class: 'lm-primary', onclick: () => prepareForClaude() }, '✨ An Claude geben'),
           h('button', { class: 'lm-secondary', onclick: () => exportHighlights() }, 'Nur Markierungen')
@@ -327,6 +365,7 @@
     );
     document.body.append(bar);
     updateCount();
+    updateTools();
     return bar;
   }
 
@@ -340,10 +379,24 @@
     if (el) el.textContent = state.highlights.length ? `${state.highlights.length} markiert` : '';
   }
 
+  function updateTools() {
+    bar?.querySelectorAll('.lm-color').forEach((b) => b.classList.toggle('lm-selected', !state.erasing && b.dataset.color === state.color));
+    bar?.querySelector('.lm-eraser')?.classList.toggle('lm-selected', state.erasing);
+    document.documentElement.classList.toggle('lm-erasing', state.erasing);
+  }
+
   function setColor(color) {
     state.color = color;
+    state.erasing = false;
     chrome.storage.local.set({ lmColor: color });
-    bar?.querySelectorAll('.lm-color').forEach((b) => b.classList.toggle('lm-selected', b.dataset.color === color));
+    updateTools();
+  }
+
+  // Der Radierer wird bewusst nicht gespeichert – nach dem Neuladen ist wieder der Textmarker aktiv.
+  function setErasing(erasing) {
+    state.erasing = erasing;
+    closeMarkMenu();
+    updateTools();
   }
 
   function setActive(active) {
