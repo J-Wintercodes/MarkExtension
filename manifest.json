@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini Lernmodus",
+  "version": "1.0.0",
+  "description": "Markiere Gemini-Chats mit dem Textmarker und lass Claude daraus eine Lernzusammenfassung erstellen.",
+  "permissions": ["storage", "scripting", "clipboardWrite"],
+  "host_permissions": [
+    "https://gemini.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["md2html.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Gemini Lernmodus",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "toggle-lernmodus": {
+      "suggested_key": { "default": "Alt+Shift+L" },
+      "description": "Lernmodus ein-/ausschalten"
+    }
+  }
+}

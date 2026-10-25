@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gemini Lernmodus – Einstellungen</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="options">
+  <main>
+    <header>
+      <img src="icons/icon48.png" alt="" width="36" height="36">
+      <h1>Gemini Lernmodus – Einstellungen</h1>
+    </header>
+
+    <section class="card">
+      <h2>Zusammenfassung mit Claude</h2>
+      <p class="hint">
+        „An Claude geben“ kopiert den Chat, deine Markierungen und eine fertige Anleitung in die Zwischenablage
+        und öffnet <a href="https://claude.ai/new" target="_blank">claude.ai</a>. Dort einfügen und abschicken – kostenlos, kein API-Key nötig.
+      </p>
+      <label for="maxChars">Maximale Länge</label>
+      <select id="maxChars">
+        <option value="100000">Kurz – 100.000 Zeichen</option>
+        <option value="200000">Mittel – 200.000 Zeichen</option>
+        <option value="300000">Standard – 300.000 Zeichen</option>
+        <option value="600000">Lang – 600.000 Zeichen (Claude Pro)</option>
+      </select>
+      <p class="hint">
+        Ist der Chat länger, werden die ältesten Nachrichten weggelassen – deine Markierungen bleiben immer vollständig drin.
+        Meldet claude.ai, dass der Text zu lang ist oder das Limit erreicht ist, stell hier eine kleinere Stufe ein.
+      </p>
+
+      <label for="extraInstructions">Eigene Wünsche an die Zusammenfassung (optional)</label>
+      <textarea id="extraInstructions" rows="3" placeholder="z. B. „Ich schreibe nächste Woche eine Klausur in Bio, bitte prüfungsrelevante Punkte hervorheben.“"></textarea>
+    </section>
+
+    <section class="card">
+      <h2>Export „Nur Markierungen“</h2>
+      <label for="format">Download-Format</label>
+      <select id="format">
+        <option value="html">HTML – schön formatiert, im Browser öffnen oder als PDF drucken</option>
+        <option value="md">Markdown (.md) – für Obsidian, Notion & Co.</option>
+        <option value="both">Beides</option>
+      </select>
+    </section>
+
+    <section class="card">
+      <h2>Farben</h2>
+      <ul class="legend">
+        <li><span class="swatch yellow"></span><strong>Wichtig</strong> – Kernstoff</li>
+        <li><span class="swatch green"></span><strong>Definition</strong> – Begriffe zum Lernen</li>
+        <li><span class="swatch pink"></span><strong>Unklar</strong> – Claude erklärt diese Stellen besonders verständlich</li>
+        <li><span class="swatch blue"></span><strong>Beispiel</strong> – Beispiele, die hängen bleiben sollen</li>
+      </ul>
+    </section>
+
+    <div class="row">
+      <button id="save" class="primary" type="button">Speichern</button>
+      <span id="save-result" class="result"></span>
+    </div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>
