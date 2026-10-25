@@ -1,4 +1,4 @@
-/* Textmarker */
+/* Textmarker (Grün/Rosa/Blau nur für Markierungen aus älteren Versionen) */
 mark.lm-mark {
   color: #1f1f1f !important;
   border-radius: 3px;
@@ -11,124 +11,56 @@ mark.lm-green  { background: #a5e6a8 !important; }
 mark.lm-pink   { background: #f8a5c8 !important; }
 mark.lm-blue   { background: #9fd0fb !important; }
 
-html.lm-active mark.lm-mark { cursor: pointer; }
-html.lm-active mark.lm-mark:hover { filter: brightness(0.92); }
-html.lm-active user-query ::selection,
-html.lm-active model-response ::selection { background: rgba(255, 213, 79, 0.55); }
+html.lm-active ::selection { background: rgba(255, 213, 79, 0.55); }
 
 /* Radierer */
-html.lm-active.lm-erasing mark.lm-mark {
+html.lm-erasing mark.lm-mark {
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><g transform='rotate(-45 12 12)'><rect x='4' y='8' width='16' height='8' rx='2' fill='%23f8a5c8' stroke='%23333'/><rect x='4' y='8' width='6' height='8' rx='2' fill='%23fff' stroke='%23333'/></g></svg>") 6 18, pointer;
 }
-html.lm-active.lm-erasing mark.lm-mark:hover { filter: none; opacity: 0.55; text-decoration: line-through; }
-html.lm-active.lm-erasing user-query ::selection,
-html.lm-active.lm-erasing model-response ::selection { background: rgba(179, 38, 30, 0.25); }
-
-/* Gemeinsame Basis für das UI der Extension */
-.lm-ui, .lm-ui * {
-  box-sizing: border-box;
-  font-family: "Google Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-.lm-ui button { font: inherit; cursor: pointer; }
+html.lm-erasing mark.lm-mark:hover { opacity: 0.55; text-decoration: line-through; }
+html.lm-erasing ::selection { background: rgba(179, 38, 30, 0.25); }
 
 /* Leiste */
+.lm-ui, .lm-ui * { box-sizing: border-box; }
 .lm-bar {
   position: fixed;
   top: 76px;
   right: 16px;
   z-index: 2147483000;
-  width: 270px;
-  padding: 10px 12px 12px;
-  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
   background: #ffffff;
-  color: #1f1f1f;
   border: 1px solid #e3e3e8;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
-  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 .lm-bar.lm-hidden { display: none; }
-.lm-bar-head { display: flex; align-items: center; gap: 6px; }
-.lm-title { font-weight: 600; font-size: 14px; }
-.lm-count { margin-left: auto; color: #6b6b70; font-size: 12px; }
-.lm-icon-btn {
-  width: 24px; height: 24px; border: 0; border-radius: 6px;
-  background: transparent; color: inherit; font-size: 14px; line-height: 1;
+.lm-tool {
+  width: 36px; height: 36px; padding: 0;
+  border: 2px solid transparent; border-radius: 9px;
+  background: transparent; font-size: 18px; line-height: 1; cursor: pointer;
 }
-.lm-icon-btn:hover { background: rgba(127, 127, 127, 0.15); }
-.lm-bar.lm-collapsed .lm-bar-body { display: none; }
-
-.lm-colors { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
-.lm-color {
-  padding: 6px 8px; border-radius: 8px; border: 2px solid transparent;
-  color: #1f1f1f; font-size: 12px; font-weight: 500; text-align: left;
-}
-.lm-color.lm-yellow, .lm-dot.lm-yellow { background: #fff176; }
-.lm-color.lm-green,  .lm-dot.lm-green  { background: #a5e6a8; }
-.lm-color.lm-pink,   .lm-dot.lm-pink   { background: #f8a5c8; }
-.lm-color.lm-blue,   .lm-dot.lm-blue   { background: #9fd0fb; }
-.lm-color.lm-selected { border-color: #1f1f1f; }
-.lm-eraser {
-  grid-column: 1 / -1;
-  padding: 6px 8px; border-radius: 8px; border: 2px dashed #c4c4cc;
-  background: transparent; color: inherit; font-size: 12px; font-weight: 500; text-align: left;
-}
-.lm-eraser:hover { background: rgba(127, 127, 127, 0.1); }
-.lm-eraser.lm-selected { border-style: solid; border-color: #b3261e; background: rgba(179, 38, 30, 0.08); color: #b3261e; }
-
-.lm-actions { display: flex; flex-direction: column; gap: 6px; }
-.lm-primary, .lm-secondary {
-  width: 100%; padding: 8px 10px; border-radius: 9px; font-weight: 600; font-size: 13px;
-}
-.lm-primary { border: 0; background: #5b4bdb; color: #fff; }
-.lm-primary:hover { background: #4b3bc8; }
-.lm-secondary { border: 1px solid #d5d5dc; background: transparent; color: inherit; }
-.lm-secondary:hover { background: rgba(127, 127, 127, 0.1); }
-.lm-bar.lm-busy .lm-primary, .lm-bar.lm-busy .lm-secondary { opacity: 0.5; pointer-events: none; }
-
-.lm-status { margin-top: 8px; color: #5b4bdb; font-size: 12px; min-height: 0; }
-.lm-status:empty { display: none; }
-.lm-bar.lm-busy .lm-status::before {
-  content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px;
-  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
-  vertical-align: -1px; animation: lm-spin 0.8s linear infinite;
-}
-@keyframes lm-spin { to { transform: rotate(360deg); } }
-
-/* Menü an einer Markierung */
-.lm-mark-menu {
-  position: fixed; z-index: 2147483001;
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 8px; border-radius: 10px;
-  background: #ffffff; border: 1px solid #e3e3e8; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-.lm-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; padding: 0; }
-.lm-dot.lm-selected { border-color: #1f1f1f; }
-.lm-delete {
-  margin-left: 4px; padding: 3px 8px; border-radius: 6px; border: 1px solid #e5a3a3;
-  background: transparent; color: #b3261e; font-size: 12px;
-}
-.lm-delete:hover { background: rgba(179, 38, 30, 0.08); }
+.lm-tool:hover { background: rgba(127, 127, 127, 0.15); }
+.lm-pen.lm-selected { border-color: #e0b400; background: rgba(255, 241, 118, 0.45); }
+.lm-eraser.lm-selected { border-color: #b3261e; background: rgba(179, 38, 30, 0.12); }
 
 /* Hinweis-Toast */
 .lm-toast {
   position: fixed; left: 50%; bottom: 120px; z-index: 2147483002;
   max-width: min(520px, calc(100vw - 32px));
   padding: 10px 16px; border-radius: 10px;
-  background: #2b2b30; color: #fff; font-size: 13px;
+  background: #2b2b30; color: #fff; font: 13px system-ui, sans-serif;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   opacity: 0; transform: translate(-50%, 10px); pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;
 }
 .lm-toast.lm-show { opacity: 1; transform: translate(-50%, 0); }
-.lm-toast.lm-toast-error { background: #b3261e; }
 
-/* Dunkles Gemini-Theme */
+/* Dunkles Theme */
 @media (prefers-color-scheme: dark) {
-  .lm-bar, .lm-mark-menu { background: #1e1f22; color: #e8e8ec; border-color: #3a3b40; }
-  .lm-count { color: #a0a0a8; }
-  .lm-secondary { border-color: #44454b; }
-  .lm-status { color: #b2a8ff; }
-  .lm-dot.lm-selected, .lm-color.lm-selected { border-color: #ffffff; }
+  .lm-bar { background: #1e1f22; border-color: #3a3b40; }
 }
-body.dark-theme .lm-bar, body.dark-theme .lm-mark-menu { background: #1e1f22; color: #e8e8ec; border-color: #3a3b40; }
-body.light-theme .lm-bar, body.light-theme .lm-mark-menu { background: #ffffff; color: #1f1f1f; border-color: #e3e3e8; }
+body.dark-theme .lm-bar, html.dark .lm-bar { background: #1e1f22; border-color: #3a3b40; }
+body.light-theme .lm-bar, html.light .lm-bar { background: #ffffff; border-color: #e3e3e8; }
