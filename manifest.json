@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chat Textmarker",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Textmarker für Gemini, ChatGPT und Claude – Markierungen bleiben im Chat gespeichert.",
   "permissions": ["storage", "scripting"],
   "host_permissions": [

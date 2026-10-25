@@ -25,26 +25,26 @@ html.lm-erasing ::selection { background: rgba(179, 38, 30, 0.25); }
 .lm-bar {
   position: fixed;
   top: 76px;
-  right: 16px;
+  right: 0;
   z-index: 2147483000;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 12px;
+  border-radius: 8px 0 0 8px;
+  overflow: hidden;
   background: #ffffff;
   border: 1px solid #e3e3e8;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border-right: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 .lm-bar.lm-hidden { display: none; }
 .lm-tool {
-  width: 36px; height: 36px; padding: 0;
-  border: 2px solid transparent; border-radius: 9px;
+  width: 26px; height: 26px; padding: 0;
+  border: 0; border-radius: 0;
   background: transparent; font-size: 18px; line-height: 1; cursor: pointer;
 }
 .lm-tool:hover { background: rgba(127, 127, 127, 0.15); }
-.lm-pen.lm-selected { border-color: #e0b400; background: rgba(255, 241, 118, 0.45); }
-.lm-eraser.lm-selected { border-color: #b3261e; background: rgba(179, 38, 30, 0.12); }
+.lm-pen.lm-selected { background: rgba(255, 213, 79, 0.6); }
+.lm-eraser.lm-selected { background: rgba(179, 38, 30, 0.25); }
 
 /* Hinweis-Toast */
 .lm-toast {
