@@ -27,7 +27,7 @@
       isDraft: (path) => !path.includes('/c/'),
     },
     'claude.ai': {
-      messages: '[data-testid="user-message"], .font-claude-response, .font-claude-message',
+      messages: '[data-testid="user-message"], [data-is-streaming], .font-claude-response, .font-claude-message',
       role: (host) => (host.matches('[data-testid="user-message"]') ? 'user' : 'model'),
       root: (host) => host,
       skip: '',
@@ -96,6 +96,7 @@
     const key = storeKey(state.chatKey);
     if (state.highlights.length) chrome.storage.local.set({ [key]: state.highlights });
     else chrome.storage.local.remove(key);
+    updateNav();
   }
 
   // ---------- Nachrichten im DOM ----------
@@ -194,6 +195,23 @@
         bestScore = score;
       }
     }
+    return { pos: best, score: bestScore };
+  }
+
+  // Erst die Nachricht mit gleichem Anfang; sonst (z. B. wenn Claude den Kopf der Antwort anders
+  // rendert) jede Nachricht derselben Rolle, die den Text enthält.
+  function findTarget(msgs, hl) {
+    const exact = msgs.find((m) => m.role === hl.role && m.key === hl.msgKey);
+    if (exact) {
+      const { pos } = locate(exact.index.text, hl);
+      if (pos >= 0) return { msg: exact, pos };
+    }
+    let best = null;
+    for (const m of msgs) {
+      if (m.role !== hl.role || m === exact) continue;
+      const { pos, score } = locate(m.index.text, hl);
+      if (pos >= 0 && (!best || score > best.score)) best = { msg: m, pos, score };
+    }
     return best;
   }
 
@@ -205,21 +223,28 @@
       return { ...m, index, key: normKey(index.text) };
     });
     for (const hl of missing) {
-      const msg = msgs.find((m) => m.role === hl.role && m.key === hl.msgKey);
-      if (!msg) continue; // Nachricht noch nicht geladen (ältere Nachrichten kommen erst beim Hochscrollen)
-      const pos = locate(msg.index.text, hl);
-      if (pos < 0) continue;
+      const target = findTarget(msgs, hl);
+      if (!target) continue; // Nachricht noch nicht geladen (ältere Nachrichten kommen erst beim Hochscrollen)
+      const { msg, pos } = target;
       wrapRange(msg.index, pos, pos + hl.text.length, hl);
       msg.index = buildIndex(msg.root);
     }
   }
 
-  // Läuft erst, wenn die Seite 400 ms ruhig ist – während eine Antwort gestreamt wird, also gar nicht.
+  // Läuft, wenn die Seite 400 ms ruhig ist – spätestens aber nach 3 s, weil manche Seiten
+  // (z. B. Claude) das DOM fast ununterbrochen ändern und der Timer sonst nie abläuft.
   let restoreTimer;
+  let restoreDeadline = 0;
   function scheduleRestore() {
     if (!state.highlights.length) return;
     clearTimeout(restoreTimer);
-    restoreTimer = setTimeout(restoreAll, 400);
+    const now = Date.now();
+    if (!restoreDeadline) restoreDeadline = now + 3000;
+    restoreTimer = setTimeout(() => {
+      restoreDeadline = 0;
+      restoreAll();
+      updateNav();
+    },Math.max(0, Math.min(400, restoreDeadline - now)));
   }
 
   // ---------- Markieren ----------
@@ -308,10 +333,86 @@
         class: 'lm-tool lm-eraser',
         title: 'Radierer: Markierung anklicken oder darüberziehen',
         onclick: () => setErasing(true),
-      }, '🧽')
+      }, '🧽'),
+      h('button', { class: 'lm-tool lm-nav lm-prev', title: 'Vorherige Markierung (Alt+↑)', onclick: () => jump(-1) }, '▲'),
+      h('div', { class: 'lm-count', title: 'Markierungen in diesem Chat' }),
+      h('button', { class: 'lm-tool lm-nav lm-next', title: 'Nächste Markierung (Alt+↓)', onclick: () => jump(1) }, '▼')
     );
     document.body.append(bar);
+    updateNav();
     return bar;
+  }
+
+  // ---------- Durch Markierungen springen (wie Strg+F) ----------
+
+  let currentId = null;
+
+  // Eine Markierung kann aus mehreren <mark> bestehen (z. B. über Absätze hinweg) – zählt einmal.
+  function markIds() {
+    const ids = [];
+    for (const m of document.querySelectorAll('mark.lm-mark')) {
+      if (!m.closest('.lm-ui') && !ids.includes(m.dataset.lmId)) ids.push(m.dataset.lmId);
+    }
+    return ids;
+  }
+
+  const marksOf = (id) => document.querySelectorAll(`mark.lm-mark[data-lm-id="${id}"]`);
+
+  // Ohne aktuelle Stelle geht es wie bei Strg+F ab der Position im sichtbaren Bereich los.
+  function startIndex(ids, dir) {
+    const tops = ids.map((id) => marksOf(id)[0].getBoundingClientRect().top);
+    if (dir > 0) {
+      const i = tops.findIndex((t) => t >= 0);
+      return i === -1 ? 0 : i;
+    }
+    const i = tops.findLastIndex((t) => t < window.innerHeight);
+    return i === -1 ? ids.length - 1 : i;
+  }
+
+  function jump(dir) {
+    const ids = markIds();
+    if (!ids.length) {
+      toast(state.highlights.length
+        ? 'Die Markierungen sind noch nicht geladen – weiter hochscrollen.'
+        : 'In diesem Chat gibt es noch keine Markierungen.');
+      return;
+    }
+    const i = ids.indexOf(currentId);
+    currentId = ids[i === -1 ? startIndex(ids, dir) : (i + dir + ids.length) % ids.length];
+    document.querySelectorAll('mark.lm-current').forEach((m) => m.classList.remove('lm-current'));
+    const marks = marksOf(currentId);
+    marks.forEach((m) => m.classList.add('lm-current'));
+    marks[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    updateNav();
+  }
+
+  function updateNav() {
+    if (!bar) return;
+    const ids = markIds();
+    const i = ids.indexOf(currentId);
+    // Nach dem Neu-Rendern einer Nachricht fehlt die Klasse wieder.
+    if (i !== -1) marksOf(currentId).forEach((m) => m.classList.add('lm-current'));
+    const text = !ids.length ? '0' : i === -1 ? String(ids.length) : `${i + 1}/${ids.length}`;
+    const count = bar.querySelector('.lm-count');
+    // Nur bei Änderung schreiben, sonst löst der MutationObserver endlos neu aus.
+    if (count.textContent !== text) count.textContent = text;
+    bar.querySelectorAll('.lm-nav').forEach((b) => { b.disabled = !ids.length; });
+  }
+
+  function onKeyDown(e) {
+    // Strg+M schaltet den Textmarker um, auch während man im Eingabefeld tippt.
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      e.stopPropagation();
+      setActive(!state.active);
+      toast(state.active ? 'Textmarker an' : 'Textmarker aus');
+      return;
+    }
+    if (!state.active || !e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    e.stopPropagation();
+    jump(e.key === 'ArrowDown' ? 1 : -1);
   }
 
   function updateTools() {
@@ -344,12 +445,14 @@
     // Neuer Chat: die Chat-ID kommt erst nach der ersten Antwort – Markierungen mitnehmen.
     const carried = site.isDraft(oldKey) && !site.isDraft(newKey) ? state.highlights : [];
     state.chatKey = newKey;
+    currentId = null;
     await loadHighlights();
     if (carried.length && !state.highlights.length) {
       state.highlights = carried;
       chrome.storage.local.remove(storeKey(oldKey));
       saveHighlights();
     }
+    updateNav();
     scheduleRestore();
   }
 
@@ -367,8 +470,12 @@
     setActive(lmActive !== false);
     scheduleRestore();
 
-    document.addEventListener('mouseup', onMouseUp, true);
+    // pointerup zusätzlich: manche Seiten stoppen mouseup, bevor es bei uns ankommt.
+    // Doppelt verarbeitet wird nichts, weil die Auswahl nach dem ersten Durchlauf geleert ist.
+    window.addEventListener('pointerup', onMouseUp, true);
+    window.addEventListener('mouseup', onMouseUp, true);
     document.addEventListener('click', onClick, true);
+    window.addEventListener('keydown', onKeyDown, true);
 
     new MutationObserver(scheduleRestore).observe(document.body, { childList: true, subtree: true, characterData: true });
     setInterval(() => {

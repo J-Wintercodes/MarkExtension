@@ -46,6 +46,17 @@ html.lm-erasing ::selection { background: rgba(179, 38, 30, 0.25); }
 .lm-pen.lm-selected { background: rgba(255, 213, 79, 0.6); }
 .lm-eraser.lm-selected { background: rgba(179, 38, 30, 0.25); }
 
+/* Durch Markierungen springen */
+.lm-prev { border-top: 1px solid #e3e3e8; }
+.lm-nav { font-size: 11px; color: #555; }
+.lm-nav:disabled { opacity: 0.35; cursor: default; background: transparent; }
+.lm-count {
+  width: 26px; padding: 1px 0;
+  font: 600 9px/1.2 system-ui, sans-serif; text-align: center; color: #555;
+  white-space: nowrap; overflow: hidden;
+}
+mark.lm-mark.lm-current { background: #ff9632 !important; outline: 2px solid #ff9632; }
+
 /* Hinweis-Toast */
 .lm-toast {
   position: fixed; left: 50%; bottom: 120px; z-index: 2147483002;
@@ -61,6 +72,10 @@ html.lm-erasing ::selection { background: rgba(179, 38, 30, 0.25); }
 /* Dunkles Theme */
 @media (prefers-color-scheme: dark) {
   .lm-bar { background: #1e1f22; border-color: #3a3b40; }
+  .lm-prev { border-top-color: #3a3b40; }
+  .lm-nav, .lm-count { color: #c4c4c8; }
 }
 body.dark-theme .lm-bar, html.dark .lm-bar { background: #1e1f22; border-color: #3a3b40; }
+body.dark-theme .lm-prev, html.dark .lm-prev { border-top-color: #3a3b40; }
+body.dark-theme :is(.lm-nav, .lm-count), html.dark :is(.lm-nav, .lm-count) { color: #c4c4c8; }
 body.light-theme .lm-bar, html.light .lm-bar { background: #ffffff; border-color: #e3e3e8; }

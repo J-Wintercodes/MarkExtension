@@ -1,4 +1,5 @@
 // Service Worker: Klick aufs Icon bzw. Alt+Shift+L schaltet den Textmarker im aktuellen Tab um.
+// (Strg+M fängt content.js direkt auf der Seite ab.)
 
 const SITES = ['https://gemini.google.com/', 'https://chatgpt.com/', 'https://chat.openai.com/', 'https://claude.ai/'];
 
